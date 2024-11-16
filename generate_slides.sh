@@ -12,7 +12,7 @@ SOURCE_FORMAT="markdown_strict\
 
 pandoc -s \
     --verbose \
-    --output=build/verilog_crashcourse.pdf \
+    --output=build/verilog_crash_course.pdf \
     --slide-level 2 \
     --shift-heading-level=-1 \
     --listings \
@@ -22,5 +22,5 @@ pandoc -s \
     --template pandoc/templates/default_mod.latex \
     -t beamer \
     --from=markdown+rebase_relative_paths \
-    verilog_crashcourse.md 
+    verilog_crash_course.md 
 
