@@ -203,7 +203,7 @@ Arithmetic operations, relations, equivalences and negation:
 * !(a = b)
 
 ###
-**Achtung:** Kommen x oder z vor, so ermittelt der Simulator bei einem Vergleich false. Will man dies vermeiden, so existieren die Operatoren === und !==. Also gilt:
+** Attention: ** If x or z do occur, the simulator determines false in a comparison. If you want to avoid this, the operators === and !== exist. So the following applies:
 
 ::: columns
 
@@ -229,17 +229,16 @@ then_statement;
 
 :::
 
-Es existieren auch boolesche Operationen wie gewohnt:
+Boolean operations exist as usual:
 
-**bitweise Operatoren:** & (UND), | (ODER, ~ (NICHT), ^ (XOR) und auch ~^ (XNOR)
+**bitwise operators:** & (AND), | (OR, ~ (NOT), ^ (XOR) und auch ~^ (XNOR)
 
-**logische Operatoren:** && (UND), || (ODER) und ! (NICHT)
+**logic operators:** && (AND), || (OR) und ! (NOT)
 
-**Schiebeoperation:** a << b (schiebe a um b Stellen nach links) und a >> b (verschiebe a um b Positionen nach
-rechts). Eine negative Anzahl b ist nicht zulässig, leere Stellen werden mit 0 aufgefüllt.
+**Shiftoperations:** a << b (shift a for b positions to the left) und a >> b (shift a for b positions to the right). A negative number b is not permitted, empty spots are filled with 0.
 
 ### Parameters (old style)
-Um Designs leichter anpassen zu können, bietet Verilog die Verwendung von Parametern an.
+In order to be able to adapt designs easier, Verilog offers the use of parameters.
 
 ```Verilog
 module mux (
@@ -247,8 +246,8 @@ module mux (
   sel,
   out);
  
-  parameter WIDTH = 8;  // Anzahl der Bits
- 
+  parameter WIDTH = 8;  // Number of bits 
+
   input  [WIDTH - 1 : 0] in1, in2;
   input sel;
   output [WIDTH - 1 : 0] out;
@@ -259,7 +258,7 @@ endmodule
 ```
 
 ### Instances and structural descriptions
-Beschreibt man einen Schaltkreis durch seine (interne) Struktur oder soll ein Teilschaltkreis wiederverwendet werden, dann wird eine Instanz erzeugt und verdrahtet.
+If you describe a circuit through its (internal) structure or if a partial circuit is to be reused, an instance is generated and wired.
 
 ::: columns
 
@@ -283,13 +282,13 @@ module xor3 (
   output wire e);
   
   wire tmp;
-  xor2 xor2_1 // Instanz 1
+  xor2 xor2_1 // Instance 1
     (
       .a(a),
       .b(b),
       .e(tmp)
     );
-  xor2 xor2_2 // Instanz 2
+  xor2 xor2_2 // Instance 2
     (
       .a(c),
       .b(tmp),
@@ -303,7 +302,7 @@ endmodule
 :::
 
 ### Code for sequential circuits
-Wie besprochen übernimmt ein Flipflop die Eingabe an den steigenden oder fallenden Flanken des Taktes. Dafür wird die Ereignissteuerung mit dem @-Symbol und always-Blöcken verwendet:
+A flip-flop takes over the input of the rising or falling edges of the clock. For this, the block entry is used with the *@-symbol* and *always* blocks:
 
 ```Verilog
 module FF (input  clk,
@@ -322,12 +321,12 @@ module FF (input  clk,
      end 
 endmodule
 ```
-Die Signalliste hinter dem @ heißt Sensitivity-List. Der reset wird synchron, wenn man or posedge reset entfernt.
+The list of signals after the @-symbol means sensitivity list. The reset is synchronized when you remove *or posedge reset*.
 
 ## Simple circuits: Combinational
 
 ###
-Kombinatorische Schaltkreise entsprechen reinen booleschen Funktionen und enthalten demzufolge nicht das Schlüsselwort *reg*. Es wird kein Speicher (Flipflops) erzeugt und Zuweisungen geschehen mit *assign*.
+Combinational circuits correspond to pure boolean functions and therefore do not contain the key word *reg*. No memory (flip-flops) gets generated and assignments are done with *assign*.
 
 ```Verilog
 module mux4to1 (in1, in2, in3, in4, sel, out);
