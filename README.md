@@ -13,5 +13,3 @@ A pre-build slideset resides in the build folder.
 ### Prerequisites
 * Tex Full installation
 * Pandoc
-
-

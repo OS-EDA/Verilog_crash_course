@@ -19,25 +19,35 @@ toc: true
 
 ## Introduction
 
-Verilog was initially developed as a simulation language in 1983/1984, bought up by Cadence and freely released in 1990.
+Verilog wurde 1983/1984 zunächst als Simulationssprache
+entwickelt, von Cadence aufgekauft und 1990 frei gegeben.
 
-The first standardization took place in 1995 by the IEEE (Verilog 95). A newer version is IEEE Standard 1364-2001 (Verilog 2001).
+Die erste Standardisierung erfolgte 1995 durch die IEEE (Verilog 95). Eine neuere
+Version ist IEEE Standard 1364–2001 (Verilog 2001).
 
-* Syntax comparable to C (VHDL was started on ADA / Pascal) with compact code
-* Spread in North America and Japan (less in Europe)
-* Can also be used as the language for netlists
-* Support from open source tools
-* The majority of the ASICs are developed in Verilog.
-* Less expressive than VHDL (curse and blessing)
+* Syntax vergleichbar mit C (VHDL ist an ADA / Pascal
+angeleht) mit kompakten Code
+* Verbreitet in Nordamerika und Japan ( weniger in Europa)
+* Kann auch als Sprache von Netzlisten verwendet werden
+* Unterstützung durch Open-Source-Tools
+* Die Mehrheit der ASICs wird in Verilog entwickelt.
+* Weniger ausdruckstark als VHDL (Fluch und Segen)
 
 ###
-The proximity to C and Java may lead to confusion. In Verilog, too, lines that describe a combinatorial circuit can also be replaced.
+Die Nähe zu C und Java führt evtl. zu Verwechselungen! Auch in
+Verilog können z.B. Zeilen, die eine kombinatorische Schaltung
+beschreiben vertauscht werden.
 
-** Verilog is a hardware description language (HDL)**
+**Verilog ist eine Hardwarebeschreibungssprache!**
 
-This crash course is limited to a subset of synthesible language constructs in Verilog.
+In diesem Abschnitt legen wir auf auf einen Subset von
+synthetisierbaren Sprachkonstrukten fest.
 
-The aim of this selection is not commercial tools, but open-source development tools such as OpenRoad [^1] or Toolchains for FPGAS, i.e. we also use some language constructs from Systemverilog, which are supported by the Yosys synthesis tool.
+Ziel unserer Auswahl sind nicht kommerzielle Tools, sondern
+offene Entwicklungswerkzeuge wie OpenRoad[^1] oder Toolchains
+für bekannte FPGAs, d.h. wir verwenden auch einige
+Sprachkonstrukte von SystemVerilog, die durch das
+Synthesewerkzeug yosys unterstützt werden.
 
 [^1]: [https://theopenroadproject.org/](https://theopenroadproject.org/)
 
@@ -72,9 +82,12 @@ The aim of this selection is not commercial tools, but open-source development t
 
 ### Synthesis tool: Yosys
 
-One should also deal with the peculiarities of the synthesis tool. The well-known open source synthesis tool Yosys writes about this
+Man sollte sich auch mit den Eigenheiten des Synthesetools
+beschäftigen! Das bekannte Open-Source-Synthesetool yosys
+schreibt dazu
 
-> Yosys is a framework for VerilogRTLsynthesis. It currently has extensive Verilog-2005 support and provides a basic set of synthesis algorithms for various application do mains. Selected features and typical applications:
+> Yosys is a framework for VerilogRTLsynthesis. It currently has extensive Verilog-2005 support and provides a ba-
+sic set of synthesis algorithms for various application do mains. Selected features and typical applications:
 
 #####
 - Process almost any synthesizable Verilog-2005 design
@@ -85,25 +98,26 @@ One should also deal with the peculiarities of the synthesis tool. The well-know
 
 ### Structure of a verilog module
 
+
 ```Verilog
 module module_name (port_list);
-// Definition of the interface
-Port declaration
-Parameter declaration
+// Definition der Schnittstelle
+Port-Deklaration
+Parameter-Deklaration
 
-// Description of the circuit
-Variables declaration
-Assignmente
-Module instanciations
+// Beschreibung des Schaltkreises
+Variablen-Deklaration
+Zuweisungen
+Modul-Instanzierungen
 
-always-blocks
+always-Bloecke
 
 endmodule
 ```
 
-Port list and port declaration can be brought together in modern verilog.
-
-// introduces a comment.
+In modernem Verilog können Portliste und Portdeklaration
+zusammengezogen werden.
+// leitet einen Kommentar ein.
 
 ### Example: A linear shiftregister
 ::: columns
@@ -159,43 +173,46 @@ endmodule
 
 :::
 
-**input** and **output** define the directions of the ports. 
+Dabei geben **input** und **output**  die **Richtung des Ports** an. 
 
 ### Constants and Operators
 
-There are four values ​​for a constant / signal:
+Es gibt vier Werte für eine Konstante / Signal: 
 
-* 0 or 1
-* X or x (unknown)
-* Z or Z (high impedance)
+* 0 oder 1 
+* X bzw. x (unbekannt) 
+* Z bzw. z (hochohmig)
 
-One can specify the width of constants:
+Man kann die Breite von Konstanten angeben:
 
-* Hexadepimal constant with 32 bit: 32'hDEADBEEF
-* Binary constant with 4 bit: 4'b1011
-* For better readability you can also use underscores: 12'B1010_1111_0001
+* Hexadezimalkonstante mit 32 Bit: 32'hDEADBEEF
+* Binärkonstante mit 4 Bit: 4'b1011
+* Zur besseren Lesbarkeit kann man auch den Underscore verwenden: 12'b1010_1111_0001
 
-To specify the number base use
+Zur Spezifikation der Zahlenbasis sind 
 
-* b (binary)
-* h (hexadecimal),
-* o (octal)
-* d (decimal)
+* b (binär)
+* h (hexadezimal),
+* o (oktal) 
+* d (dezimal) zulässig.
 
-The default is decimal (d) and the bit width is optional, i.e. 4711 is a permissible (decimal) constant.
+Der Default ist dezimal (d) und die Bitbreite ist optional, d.h. 4711
+ist eine zulässige (dezimal) Konstante.
 
 ###
-There is an array notation:
+
+Passend zu den Konstanten existiert eine Array-Schreibweise:
 
 * wire [7:0] serDat;
 * reg [0:32] shiftReg;
-* Arrays can be sliced to Bits:
+* Einzelne Bits können gesliced werden:
     * serDat[3 : 0] (low-nibble) 
     * serDat[7] (MSB).
-* {serDat[7:6], serDat[1:0]} notes the concatenation.
-* Bits can be replicated and converted into an array, i.e {8{serData[7 : 4]}} contains eight copies of the high-nibble from serDat and has a width of 32.
+* {serDat[7:6], serDat[1:0]} notiert die Konkatenation.
+* Bits können repliziert und in ein Array umgewandelt werden, d.h. {8{serData[7 : 4]}} enthält acht Kopien des high-nibble von serDat und hat eine Breite von 32.
 
-Arithmetic operations, relations, equivalences and negation:
+Weiterhin existieren die üblichen arithmetischen Operationen,
+Ordnungsrelationen, Äquivalenzen und Negation:
 
 * a + b, a - b, a * b, a / b und a % b
 * a > b, a <= b, und a >= b
@@ -203,6 +220,7 @@ Arithmetic operations, relations, equivalences and negation:
 * !(a = b)
 
 ###
+
 **Achtung:** Kommen x oder z vor, so ermittelt der Simulator bei einem Vergleich false. Will man dies vermeiden, so existieren die Operatoren === und !==. Also gilt:
 
 ::: columns
