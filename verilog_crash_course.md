@@ -55,9 +55,8 @@ Synthesewerkzeug yosys unterstützt werden.
 
 ##### Literature
 
-* Donald E. Thomas, Philip R. Moorby, Hardware Description
-Language, Kluwer Academic Publishers, 2002
-* Blaine Readler, Verilog by example, Full Arc Press, 2011
+* Donald E. Thomas, Philip R. Moorby, The Verilog Hardware Description Language, Kluwer Academic Publishers, 2002, ISBN 978-1475775891 
+* Blaine Readler, Verilog by example, Full Arc Press, 2011, ISBN 978-0983497301
 
 ### Contributions, mentions and license
 
@@ -81,7 +80,7 @@ Language, Kluwer Academic Publishers, 2002
 
     GPLv3
 
-## Synthesis tool: Yosys
+### Synthesis tool: Yosys
 
 Man sollte sich auch mit den Eigenheiten des Synthesetools
 beschäftigen! Das bekannte Open-Source-Synthesetool yosys
@@ -343,16 +342,458 @@ endmodule
 ```
 Die Signalliste hinter dem @ heißt Sensitivity-List. Der reset wird synchron, wenn man or posedge reset entfernt.
 
-## A few basic circuits in verilog
+## Simple circuits: Combinational
 
-### Combinational circuits
+###
+Kombinatorische Schaltkreise entsprechen reinen booleschen Funktionen und enthalten demzufolge nicht das Schlüsselwort *reg*. Es wird kein Speicher (Flipflops) erzeugt und Zuweisungen geschehen mit *assign*.
 
-### Sequential circuits
+```Verilog
+module mux4to1 (in1, in2, in3, in4, sel, out);
 
-## Selected features in verilog
+  parameter WIDTH = 8; 
 
-### Parameterized Hardware
+  input [WIDTH - 1 : 0] in1, in2, in3, in4;
+  input [1:0] sel;
+  output [WIDTH - 1 : 0] out;
 
-### The preprocessor
+  assign out = (sel == 2'b00) ? in1 :
+               (sel == 2'b01) ? in2 :
+               (sel == 2'b10) ? in3 :
+               in4;
+endmodule
+```
 
-### Yosys and Systemverilog
+### Priority encoder
+Analog zur VHDL-Version formulieren beschreiben wir den Prioritätsencoder wie folgt:
+
+```Verilog
+module prienc (input  wire [4 : 1] req, 
+               output wire [2 : 0] idx);
+
+   assign idx = (req[4] == 1'b1) ? 3'b100 :
+                (req[3] == 1'b1) ? 3'b011 :
+                (req[2] == 1'b1) ? 3'b010 :
+                (req[1] == 1'b1) ? 3'b001 :
+                3'b000;
+
+endmodule
+```
+
+### Priority encoder (alternative version)
+Für einen Prioritätsencoder kann man das *don't care*-Feature von Verilog verwenden.
+
+```Verilog
+module prienc (input  [4:1] req,
+               output reg [2:0] idx);
+
+  always @(*) begin
+    casez (req) // casez erlaubt don't-care
+       4'b1???: idx = 3'b100; // Auch: idx = 4;
+       4'b01??: idx = 3'b011;
+       4'b001?: idx = 3'b010;
+       4'b0001: idx = 3'b001;
+       default: idx = 3'b000;
+    endcase
+  end
+
+endmodule
+```
+
+## Simple circuits: Sequential
+
+### Synchronous design
+Im Gegenteil zu kombinatorischen Schaltkreisen verwenden sequentielle Schaltkreise internen Speicher, d.h. die Ausgabe hängt nicht nur von der Eingabe ab.
+
+Bei der synchronen Methode werden alle Speicherelemente durch einen globalen Takt kontrolliert / synchronisiert. Alle Berechnungen werden an der steigenden (und/oder) fallenden Flanke des Taktes vorgenommen.
+
+Das synchrone Design ermöglicht den Entwurf, Test und die Synthese von großen Schaltkreisen mit marktüblichen Tools. Aus diesem Grund ist es empfehlenswert dieses Designprinzip zu erinnerlichen!
+
+Weiterhin sollte keine (kombinatorische) Logik im Taktpfad sein, da dies zu Problemen mit der Laufzeit der Clocksignale führen kann!
+
+### Synchronous circuits
+Die Struktur von synchronen Schaltkreisen ist idealisiert wie folgt aufgebaut:
+
+**TODO: Picture here**
+
+### A binary counter
+Entsprechend dem synchronen Design kann ein frei laufender Binärzähler (free running binary counter) realisiert werden:
+
+```Verilog
+module freecnt (value, clk, reset);
+
+  parameter WIDTH = 8;
+
+  input  wire clk;
+  input  wire reset;
+  output wire [WIDTH - 1 : 0] value;
+
+  wire [WIDTH - 1 : 0] valN;
+  reg  [WIDTH - 1 : 0] val;
+
+  always @(posedge clk) begin
+
+   if (reset) begin // Synchron reset
+     val <= {WIDTH{1'b0}};
+   end else begin
+     val <= valN;
+   end
+
+  end
+
+  assign valN = val + 1; // Nextstate logic
+  assign value = val; // Output logic
+endmodule
+```
+
+### Synthesis result of the binary counter
+
+**TODO: Picture here**
+
+An dieser Stelle kann man genau sehen, dass das Ergebnis dem Schaubild des synchronen Designs folgt.
+
+*RTL_REG_SYNC* entspricht dem Stateregister und *RTL_ADD* entspricht der Next State Logic.
+
+### Some remarks
+Bisher verwenden wir drei Zuweisungsoperatoren:
+
+* assign signal0 = value,
+* signal2 <= value und
+* signal1 = value
+
+Die *assign*-Anweisung ist als continuous assignment bekannt und entspricht (grob) einer immer aktiven Drahtverbindung. Sie wird für Signale vom Typ *wire* verwendet und ist für *reg* (Register) nicht zulässig.
+
+Der Operator <= heißt non-blocking assignment. Diese Zuweisung wird für synthetisierte Register verwendet, d.h. in *always*-Blöcken mit *posedge clk* in der Sensitivity-Liste.
+
+Die Variante = heißt blocking assignment und wird für kombinatorische *always*-Blöcke verwendet. Achtung: Für Signale vom Typ *wire* nicht zulässig! Also Typ reg verwenden
+
+### A modulo counter
+Entsprechend dem synchronen Design kann ein frei laufender Modulo Binärzähler (free running modulo binary counter) realisiert werden:
+
+::: columns
+
+:::: column
+
+```Verilog
+module modcnt (value, clk, reset, sync);
+
+  parameter WIDTH  = 10,
+            MODULO = 800,
+            hsMin  = 656,
+            hsMax  = 751;
+
+  input  wire clk;
+  input  wire reset;
+  output wire [WIDTH - 1 : 0] value;
+  output wire sync;
+
+  wire [WIDTH - 1 : 0] valN;
+  reg  [WIDTH - 1 : 0] val;
+```
+::::
+
+:::: column
+
+```Verilog
+  always @(posedge clk) begin
+   
+    if (reset) begin // Synchron reset
+      val <= {WIDTH{1'b0}};
+    end else begin
+      val <= valN;
+    end
+  
+  end
+
+  // Nextstate logic
+  assign valN = (val < MODULO) ? val + 1 : 0;
+
+  // Output logic
+  assign value = val;
+  assign sync = ((val >= hsMin) && (val <= hsMax)) ? 1 : 0;
+
+endmodule
+```
+
+::::
+
+:::
+
+### Synthesis result of the modulo counter
+
+In diesem Fall sind Next State Logic und Output Logic natürlich deutlich komplizierter:
+
+**TODO: Picture here**
+
+### A register file
+RISC-V Prozessoren besitzen ein Registerfile mit einem besonderen Zero-Register. Lesen liefert immer eine 0 und Schreiboperationen werden ignoriert.
+
+```Verilog
+module regfile (input clk,
+                input [4:0] writeAdr, input [31 : 0] dataIn,
+                input wrEn,
+                input [4:0] readAdrA, output reg [31:0] dataOutA,
+                input [4:0] readAdrB, output reg [31:0] dataOutB);
+
+  reg [31 : 0] memory [1 : 31];
+
+  always @(posedge clk) begin
+
+    if ((wrEn) && (writeAdr != 0)) begin
+
+      memory[writeAdr] <= dataIn;
+
+    end
+
+    dataOutA <= (readAdrA == 0) ? 0 : memory[readAdrA];
+    dataOutB <= (readAdrB == 0) ? 0 : memory[readAdrB];
+
+  end
+
+endmodule
+```
+
+### Synthesis result of the register file
+Das Syntheseergebnis ist dann schon etwas unübersichtlicher:
+
+**TODO: Picture here**
+
+## Selected feature: Parameterized counter
+Die neueren Varianten von Verilog bieten eine verbesserte Version des Parameter-Features:
+
+::: columns
+:::: column
+```Verilog
+module cnt
+  #(parameter N = 8,
+    parameter DOWN = 0)
+
+   (input clk,
+    input resetN,
+    input enable,
+    output reg [N-1:0] out);
+
+    always @ (posedge clk) begin
+    
+     if (!resetN) begin // Synchron
+       out <= 0;
+     end else begin
+     if (enable)
+       if (DOWN)
+        out <= out - 1;
+      else
+        out <= out + 1;
+     else
+       out <= out;
+     end
+     
+    end
+
+endmodule
+```
+::::
+
+:::: column
+``` Verilog
+module doubleSum
+  #(parameter N = 8)
+   (input clk,
+    input resetN,
+    input enable,
+    output [N  :  0] sum);
+
+  wire [N - 1  :  0] val0;
+  wire [N - 1  :  0] val1;
+
+  // Counter 0
+  cnt #(.N(N), .DOWN(0)) c0 (.clk(clk),
+                             .resetN(resetN),
+                             .enable(enable),
+                             .out(val0));
+
+  // Counter 1
+  cnt #(.N(N), .DOWN(1)) c1 (.clk(clk),
+                             .resetN(resetN),
+                             .enable(enable),
+                             .out(val1));
+
+  assign sum = val0 + val1;
+
+endmodule
+```
+::::
+:::
+
+### Synthesis result of the parameterized counter
+
+**TODO: Picture here**
+
+### An alternative version
+Verilog bietet weiterhin eine (ältere) Möglichkeit für die Parametrisierung eines Designs:
+
+::: columns
+:::: column
+```Verilog
+module double
+  #(parameter N = 8)
+  (input clk,
+   input resetN,
+   input enable,
+   output [N : 0] sum);
+
+  wire [N - 1 : 0] val0;
+  wire [N - 1 : 0] val1;
+
+  // Counter 0
+  defparam c0.N = N;
+  defparam c0.DOWN = 0;
+  cnt c0 (.clk(clk),
+          .resetN(resetN),
+          .enable(enable),
+          .out(val0));
+```
+::::
+
+:::: column
+``` Verilog
+  // Counter 1
+  defparam c1.N = N;
+  defparam c1.DOWN = 1;
+  cnt c1 (.clk(clk),
+          .resetN(resetN),
+          .enable(enable),
+          .out(val1));
+
+  assign sum = val0 + val1;
+
+endmodule
+```
+::::
+:::
+
+Diese Variante führt zum gleichen Syntheseergebnis.
+
+## Selected feature: Preprocessor
+Verilog kennt einen Präprozessor (vgl. C/C++) mit 'define, 'include und 'ifdef. Dabei definiert ein *parameter* eine Konstante und `define eine Textsubstitution.
+
+```Verilog
+`define SHIFT_RIGHT
+module defineDemo (input clk, s_in,
+                   output s_out);
+  
+  reg [3:0] regs;
+
+  always @(posedge clk) begin // Next State Logic im always - Block
+    `ifdef SHIFT_RIGHT
+      regs <= {s_in, regs[3:1]};
+    `else
+      regs <= {regs[2:0], s_in};
+    `endif
+  end
+
+  `ifdef SHIFT_RIGHT
+    assign s_out = regs[0];
+  `else
+    assign s_out = regs[3];
+  `endif
+
+endmodule
+```
+
+### Two results of the synthesis
+Durch die bedingte Synthese erhält man zwei unterschiedliche Schieberegister:
+
+**TODO: Picture here**
+
+### Modularisation
+Vergleichbar mit dem Include-Mechanismus von C/C++ bietet Verilog die Möglichkeit einer primitiven Modularisierung mit `include.
+
+Dabei ist das Tick-Symbol ` wieder der Marker für einen Präprozessor-Befehl, vergleichbar mit # bei C/C++.
+
+Mit `include headers_def.h können z.B. Konfigurationseinstellungen aus der Datei headers_def.h inkludiert werden. Da ein reiner Textersatz durchgeführt wird, ist die Dateiendung im Prinzip beliebig. Sinnvollerweise verwendet man .h analog zu C.
+
+Sollte ein `define vor einem `include angeordnet sein, so wird der Textersatz auch im inkludierten Headerfile durchgeführt, d.h. ein `define gilt global ab der Definition. Damit können aber vergleichbar mit C unbeabsichtige Ersetzungen passieren.
+
+## Selected feature: Yosys and Systemverilog
+Das Open-Source Synthesetool yosys stellt einige ausgewählte Erweiterungen aus SystemVerilog zur Verfügung.
+
+* Besonders interessant ist der logic-Datentyp, der Zuweisungen und reg und wire deutlich vereinfacht. Mit logic signed deklariert man vorzeichenbehaftete Zahlen.
+* Für sequentielle Logik wurde der spezielle Block always_ff eingeführt. Für Zuweisungen werden ausschließlich non-blocking Assignments (<=) verwendet.
+* Für kombinatorische Logik ersetzt always_comb das Konstrukt always @(*). In always_comb-Blöcken werden nur blocking Assignments (=) verwendet.
+
+### Another counter
+Nun soll der free-running counter neu implementiert werden:
+
+```Verilog
+module freecnt2
+
+  #(parameter WIDTH = 8)
+  (input  logic clk,
+   input  logic reset,
+   output logic [WIDTH - 1 : 0] value);
+
+  logic [WIDTH - 1 : 0] valN;
+  logic [WIDTH - 1 : 0] val;
+
+  always_ff @(posedge clk) begin
+
+    if (reset) begin // Synchron reset
+      val <= {WIDTH{1'b0}};
+    end else begin
+      val <= valN;
+    end
+
+  end
+
+  always_comb begin
+
+    valN  = val + 1; // Nextstate logic
+    value = val; // Output logic
+
+  end
+endmodule
+```
+
+### Blocking and Non-blocking assignments in always_ff
+Vorsicht mit falschen Zuweisungen in always_ff:
+
+::: columns
+:::: column
+```Verilog
+module demoOk (input clk, 
+               input d, 
+               output q1, 
+               output q2, 
+               output q3);
+
+  always_ff @(posedge clk) begin
+    q1 <= d;
+    q2 <= q1;
+    q3 <= q2;
+  end
+
+endmodule
+```
+
+**TODO: picture**
+::::
+
+:::: column
+``` Verilog
+module demoWrong (input clk, 
+                  input d, 
+                  output q1, 
+                  output q2, 
+                  output q3);
+
+  always_ff @(posedge clk) begin
+    q1 = d;
+    q2 = q1;
+    q3 = q2;
+  end
+
+endmodule
+```
+
+**TODO: picture**
+::::
+:::
