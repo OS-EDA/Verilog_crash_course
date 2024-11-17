@@ -163,9 +163,9 @@ endmodule
 
 ### Constants and Operators
 
-There are four values ​​for a constant / signal:
+There are four values available for constants and signals:
 
-* 0 or 1
+* 0 / 1
 * X or x (unknown)
 * Z or Z (high impedance)
 
@@ -182,7 +182,7 @@ To specify the number base use
 * o (octal)
 * d (decimal)
 
-The default is decimal (d) and the bit width is optional, i.e. 4711 is a permissible (decimal) constant.
+The default is decimal (d) and the bit width is optional, i.e. 4711 is a valid (decimal) constant.
 
 ###
 There is an array notation:
@@ -345,7 +345,7 @@ endmodule
 ```
 
 ### Priority encoder
-Analog zur VHDL-Version formulieren beschreiben wir den Prioritätsencoder wie folgt:
+Similarly to the VHDL version, we describe the priority encoder as follows:
 
 ```Verilog
 module prienc (input  wire [4 : 1] req, 
@@ -361,15 +361,15 @@ endmodule
 ```
 
 ### Priority encoder (alternative version)
-Für einen Prioritätsencoder kann man das *don't care*-Feature von Verilog verwenden.
+For a priority encoder you can use the *don't care* feature from Verilog.
 
 ```Verilog
 module prienc (input  [4:1] req,
                output reg [2:0] idx);
 
   always @(*) begin
-    casez (req) // casez erlaubt don't-care
-       4'b1???: idx = 3'b100; // Auch: idx = 4;
+    casez (req) // casez allows don't-care
+       4'b1???: idx = 3'b100; // Also: idx = 4;
        4'b01??: idx = 3'b011;
        4'b001?: idx = 3'b010;
        4'b0001: idx = 3'b001;
@@ -383,21 +383,21 @@ endmodule
 ## Simple circuits: Sequential
 
 ### Synchronous design
-Im Gegenteil zu kombinatorischen Schaltkreisen verwenden sequentielle Schaltkreise internen Speicher, d.h. die Ausgabe hängt nicht nur von der Eingabe ab.
+Contrary to combinational circuits, sequential circuits use internal memory, i.e. the output not only depends on the input.
 
-Bei der synchronen Methode werden alle Speicherelemente durch einen globalen Takt kontrolliert / synchronisiert. Alle Berechnungen werden an der steigenden (und/oder) fallenden Flanke des Taktes vorgenommen.
+In the synchronous method, all memory elements are checked / synchronized by a global clock. All calculations are carried out on the rising (and/or) falling edge of the clock.
 
-Das synchrone Design ermöglicht den Entwurf, Test und die Synthese von großen Schaltkreisen mit marktüblichen Tools. Aus diesem Grund ist es empfehlenswert dieses Designprinzip zu erinnerlichen!
+The synchronous design enables the draft, test and the synthesis of large circuits with market tools. For this reason, it is advisable to remember this design principle.
 
-Weiterhin sollte keine (kombinatorische) Logik im Taktpfad sein, da dies zu Problemen mit der Laufzeit der Clocksignale führen kann!
+Furthermore, there should be no (combinational) logic in the clock path, as this can lead to problems with the distribution times of the clock signals.
 
 ### Synchronous circuits
-Die Struktur von synchronen Schaltkreisen ist idealisiert wie folgt aufgebaut:
+The structure of synchronous circuits is idealized as follows:
 
 **TODO: Picture here**
 
 ### A binary counter
-Entsprechend dem synchronen Design kann ein frei laufender Binärzähler (free running binary counter) realisiert werden:
+According to the synchronous design, a free running binary counter can be realized:
 
 ```Verilog
 module freecnt (value, clk, reset);
@@ -430,25 +430,25 @@ endmodule
 
 **TODO: Picture here**
 
-An dieser Stelle kann man genau sehen, dass das Ergebnis dem Schaubild des synchronen Designs folgt.
+At this point you can see that the result follows the diagram of the synchronous design.
 
-*RTL_REG_SYNC* entspricht dem Stateregister und *RTL_ADD* entspricht der Next State Logic.
+*RTL_REG_SYNC* corresponds to the stateregister and *RTL_ADD* corresponds to the next state logic.
 
 ### Some remarks
-Bisher verwenden wir drei Zuweisungsoperatoren:
+So far we use three assignment operators:
 
-* assign signal0 = value,
-* signal2 <= value und
+* assign signal0 = value
+* signal2 <= value 
 * signal1 = value
 
-Die *assign*-Anweisung ist als continuous assignment bekannt und entspricht (grob) einer immer aktiven Drahtverbindung. Sie wird für Signale vom Typ *wire* verwendet und ist für *reg* (Register) nicht zulässig.
+The *assign* instructions is known as the continuous assignment and corresponds (roughly) to an ever active wire connection. It is used for signals of the type *wire* and is not permitted for *reg* (register).
 
-Der Operator <= heißt non-blocking assignment. Diese Zuweisung wird für synthetisierte Register verwendet, d.h. in *always*-Blöcken mit *posedge clk* in der Sensitivity-Liste.
+The operator <= means non-blocking assignment. This assignment is used for synthesized registers, i.e. in *always*-blocks with *posedge clk* in the sensitivity list.
 
-Die Variante = heißt blocking assignment und wird für kombinatorische *always*-Blöcke verwendet. Achtung: Für Signale vom Typ *wire* nicht zulässig! Also Typ reg verwenden
+The variant = is called blocking assignment and is used for combinational *always*-blocks. Attention: Not allowed for signals of the type *wire*. So use the type *reg*.
 
 ### A modulo counter
-Entsprechend dem synchronen Design kann ein frei laufender Modulo Binärzähler (free running modulo binary counter) realisiert werden:
+According to the synchronous design, a freely running modulo counter can be realized:
 
 ::: columns
 
@@ -501,12 +501,12 @@ endmodule
 
 ### Synthesis result of the modulo counter
 
-In diesem Fall sind Next State Logic und Output Logic natürlich deutlich komplizierter:
+In this case, next state logic and output logic are of course much more complicated:
 
 **TODO: Picture here**
 
 ### A register file
-RISC-V Prozessoren besitzen ein Registerfile mit einem besonderen Zero-Register. Lesen liefert immer eine 0 und Schreiboperationen werden ignoriert.
+RISC-V processors have a register file with a special zero register. Reading always provides 0 and writing operations are ignored.
 
 ```Verilog
 module regfile (input clk,
@@ -534,12 +534,12 @@ endmodule
 ```
 
 ### Synthesis result of the register file
-Das Syntheseergebnis ist dann schon etwas unübersichtlicher:
+The synthesis result is then a little more confusing:
 
 **TODO: Picture here**
 
 ## Selected feature: Parameterized counter
-Die neueren Varianten von Verilog bieten eine verbesserte Version des Parameter-Features:
+The newer variants of Verilog offer an improved version of the parameter feature:
 
 ::: columns
 :::: column
@@ -609,7 +609,7 @@ endmodule
 **TODO: Picture here**
 
 ### An alternative version
-Verilog bietet weiterhin eine (ältere) Möglichkeit für die Parametrisierung eines Designs:
+Verilog still offers a (older) possibility for the parameterization of a design:
 
 ::: columns
 :::: column
@@ -651,10 +651,10 @@ endmodule
 ::::
 :::
 
-Diese Variante führt zum gleichen Syntheseergebnis.
+This variant leads to the same synthesis result.
 
 ## Selected feature: Preprocessor
-Verilog kennt einen Präprozessor (vgl. C/C++) mit \`define, \`include und \`ifdef. Dabei definiert ein *parameter* eine Konstante und \`define eine Textsubstitution.
+Verilog knows a preprocessor (cf. C/C ++) with \`define, \`include and \`ifdef. A *parameter* defines a constant and \`define a text substitution.
 
 ```Verilog
 `define SHIFT_RIGHT
@@ -663,7 +663,7 @@ module defineDemo (input clk, s_in,
   
   reg [3:0] regs;
 
-  always @(posedge clk) begin // Next State Logic im always - Block
+  always @(posedge clk) begin // next state logic in always-block
     `ifdef SHIFT_RIGHT
       regs <= {s_in, regs[3:1]};
     `else
@@ -681,28 +681,28 @@ endmodule
 ```
 
 ### Two results of the synthesis
-Durch die bedingte Synthese erhält man zwei unterschiedliche Schieberegister:
+The conditional synthesis gives you two different shift registers:
 
 **TODO: Picture here**
 
 ### Modularisation
-Vergleichbar mit dem Include-Mechanismus von C/C++ bietet Verilog die Möglichkeit einer primitiven Modularisierung mit `include.
+Comparable to the include mechanism of C/C ++, Verilog offers the possibility of primitive modularization with \`include.
 
-Dabei ist das Tick-Symbol \` wieder der Marker für einen Präprozessor-Befehl, vergleichbar mit # bei C/C++.
+The tick symbol \` is again the marker for a preprocessor command, comparable to # at C/C++.
 
-Mit \`include headers_def.h können z.B. Konfigurationseinstellungen aus der Datei headers_def.h inkludiert werden. Da ein reiner Textersatz durchgeführt wird, ist die Dateiendung im Prinzip beliebig. Sinnvollerweise verwendet man .h analog zu C.
+With \`include headers_def.h, for example, configuration settings from the file headers_def.h can be included. Since a pure text replacement is carried out, the file extension is basically arbitrary. It is meaningfully to use .h analogous to C.
 
-Sollte ein \`define vor einem \`include angeordnet sein, so wird der Textersatz auch im inkludierten Headerfile durchgeführt, d.h. ein \`define gilt global ab der Definition. Damit können aber vergleichbar mit C unbeabsichtige Ersetzungen passieren.
+If a \`define is arranged in front of a \`include, the text replacement is also carried out in the included header file, i.e. a \`define applies globally from the definition on. However, this can happen comparable to C unintentionally.
 
 ## Selected feature: Yosys and Systemverilog
-Das Open-Source Synthesetool yosys stellt einige ausgewählte Erweiterungen aus SystemVerilog zur Verfügung.
+The open source synthesetool Yosys provides some selected extensions from SystemVerilog.
 
-* Besonders interessant ist der logic-Datentyp, der Zuweisungen und reg und wire deutlich vereinfacht. Mit logic signed deklariert man vorzeichenbehaftete Zahlen.
-* Für sequentielle Logik wurde der spezielle Block always_ff eingeführt. Für Zuweisungen werden ausschließlich non-blocking Assignments (<=) verwendet.
-* Für kombinatorische Logik ersetzt always_comb das Konstrukt always @(*). In always_comb-Blöcken werden nur blocking Assignments (=) verwendet.
+* The logic datatype is particularly interesting, which simplifies allocations with *reg* and *wire*. With *logic signed* you declare signed numbers.
+* The special block *always_ff* was introduced for sequential logic. Only non-blocking assignments (<=) are used for assignments.
+* For combinatorial logic, *always_comb* replaces the construct *always @()*. Only blocking assignments (=) are used in *always_comb* blocks.
 
 ### Another counter
-Nun soll der free-running counter neu implementiert werden:
+Now the free running counter is to be re-implemented:
 
 ```Verilog
 module freecnt2
@@ -735,7 +735,7 @@ endmodule
 ```
 
 ### Blocking and Non-blocking assignments in always_ff
-Vorsicht mit falschen Zuweisungen in always_ff:
+Caution with false assignments in *always_ff*:
 
 ::: columns
 :::: column
