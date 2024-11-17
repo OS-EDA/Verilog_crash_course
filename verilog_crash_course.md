@@ -394,7 +394,7 @@ Furthermore, there should be no (combinational) logic in the clock path, as this
 ### Synchronous circuits
 The structure of synchronous circuits is idealized as follows:
 
-**TODO: Picture here**
+![Idealized diagram of a synchronous circuit](pics/synchronous_circuit_diagram.png)
 
 ### A binary counter
 According to the synchronous design, a free running binary counter can be realized:
@@ -683,7 +683,7 @@ endmodule
 ### Two results of the synthesis
 The conditional synthesis gives you two different shift registers:
 
-**TODO: Picture here**
+![Two different shift registers](pics/define_demo_all.png)
 
 ### Modularisation
 Comparable to the include mechanism of C/C ++, Verilog offers the possibility of primitive modularization with \`include.
@@ -745,17 +745,14 @@ module demoOk (input clk,
                output q1, 
                output q2, 
                output q3);
-
   always_ff @(posedge clk) begin
     q1 <= d;
     q2 <= q1;
     q3 <= q2;
   end
-
 endmodule
 ```
-
-**TODO: picture**
+Okay: ![always_ff demo: okay](pics/always_demo_ok.png)
 ::::
 
 :::: column
@@ -765,16 +762,13 @@ module demoWrong (input clk,
                   output q1, 
                   output q2, 
                   output q3);
-
   always_ff @(posedge clk) begin
     q1 = d;
     q2 = q1;
     q3 = q2;
   end
-
 endmodule
 ```
-
-**TODO: picture**
+Wrong: ![always_ff demo: wrong](pics/always_demo_wrong.png)
 ::::
 :::
