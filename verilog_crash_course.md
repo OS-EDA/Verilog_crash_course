@@ -428,7 +428,7 @@ endmodule
 
 ### Synthesis result of the binary counter
 
-**TODO: Picture here**
+![Synthesis diagram of the binary counter](pics/freecnt.png)
 
 At this point you can see that the result follows the diagram of the synchronous design.
 
